@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スキルシート入力フォーム</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, #2c5f8a 0%, #1a3f5c 100%);
+      color: #fff;
+      text-align: center;
+      padding: 36px 20px 28px;
+    }
+    .page-header h1 { font-size: 1.8rem; letter-spacing: 0.12em; font-weight: 700; }
+    .page-header p  { font-size: 0.88rem; margin-top: 6px; opacity: 0.85; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 32px 16px 60px; }
+
+    /* Section card */
+    .section {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .section-title {
+      background: #2c5f8a;
+      color: #fff;
+      padding: 12px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .section-body { padding: 22px 24px; }
+
+    /* Field row */
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label.field-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #2c5f8a;
+      margin-bottom: 6px;
+    }
+    .required::after {
+      content: '必須';
+      background: #e05555;
+      color: #fff;
+      font-size: 0.68rem;
+      border-radius: 3px;
+      padding: 1px 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+      font-weight: normal;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 13px;
+      border: 1.5px solid #c8d4e0;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      color: #333;
+      background: #fafcff;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #2c5f8a;
+      box-shadow: 0 0 0 3px rgba(44,95,138,.12);
+      background: #fff;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232c5f8a' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    textarea.large { min-height: 160px; }
+
+    /* Inline group */
+    .inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .inline input, .inline select { flex: 1; min-width: 0; }
+    .inline-label { font-size: 0.88rem; color: #555; white-space: nowrap; flex-shrink: 0; }
+
+    /* Split 2 columns */
+    .col2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .col3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* Postal code row */
+    .postal-row { display: flex; gap: 10px; align-items: flex-end; }
+    .postal-row input[type="text"] { max-width: 160px; }
+    .btn-postal {
+      padding: 9px 16px;
+      background: #2c5f8a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s;
+      flex-shrink: 0;
+    }
+    .btn-postal:hover { background: #1a3f5c; }
+
+    /* Hint text */
+    .hint {
+      font-size: 0.78rem;
+      color: #777;
+      margin-top: 4px;
+    }
+
+    /* Work history card */
+    .work-card {
+      border: 1.5px solid #d8e4ef;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 18px;
+      background: #f8fbff;
+    }
+    .work-card:last-child { margin-bottom: 0; }
+    .work-card-title {
+      font-weight: 700;
+      color: #2c5f8a;
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #c8d4e0;
+    }
+
+    /* Period inline */
+    .period-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .period-row input[type="number"] {
+      width: 90px;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .period-sep { color: #555; white-space: nowrap; font-size: 0.88rem; }
+
+    /* Skill table */
+    .skill-table { width: 100%; border-collapse: collapse; }
+    .skill-table th, .skill-table td {
+      padding: 10px 14px;
+      border: 1px solid #d4e0ea;
+      font-size: 0.88rem;
+    }
+    .skill-table thead tr { background: #eaf1f8; }
+    .skill-table th { font-weight: 700; color: #2c5f8a; text-align: left; }
+    .skill-table td:first-child { font-weight: 600; white-space: nowrap; }
+    .skill-table select { font-size: 0.85rem; padding: 6px 30px 6px 10px; }
+
+    /* Certification grid */
+    .cert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 560px) { .cert-grid { grid-template-columns: 1fr; } }
+
+    /* Interview dates */
+    .interview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 560px) { .interview-grid { grid-template-columns: 1fr; } }
+
+    /* Submit */
+    .submit-area { text-align: center; margin-top: 36px; }
+    .btn-submit {
+      padding: 14px 60px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(249,115,22,.45);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,.55); }
+
+    /* Divider between sub-sections */
+    .sub-divider { border: none; border-top: 1px dashed #cdd9e5; margin: 20px 0; }
+
+    /* Income inline */
+    .income-row { display: flex; align-items: center; gap: 8px; }
+    .income-row input { max-width: 140px; }
+    .income-unit { font-size: 0.9rem; color: #555; white-space: nowrap; }
+
+    @media (max-width: 600px) {
+      .col2, .col3 { grid-template-columns: 1fr; }
+      .page-header h1 { font-size: 1.4rem; }
+    }
+
+    /* Placeholder font size — smaller so text fits in narrow inputs */
+    input::placeholder, textarea::placeholder { font-size: 0.78rem; }
+
+    /* Confirmation screen */
+    .confirm-section { background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.07); margin-bottom:24px; overflow:hidden; }
+    .confirm-section-title { background:#2c5f8a; color:#fff; padding:12px 22px; font-size:1rem; font-weight:700; letter-spacing:.06em; }
+    .confirm-table { width:100%; border-collapse:collapse; }
+    .confirm-table tr:nth-child(even) { background:#f8fbff; }
+    .confirm-table td { padding:11px 18px; border-bottom:1px solid #e8eff6; font-size:0.88rem; vertical-align:top; line-height:1.7; }
+    .confirm-table td:first-child { width:36%; font-weight:700; color:#2c5f8a; white-space:nowrap; }
+    .confirm-table td:last-child { color:#333; word-break:break-all; }
+    .confirm-empty { color:#bbb; font-style:italic; }
+    .confirm-actions { display:flex; justify-content:center; gap:16px; margin-top:36px; flex-wrap:wrap; }
+    .btn-back { padding:13px 36px; background:#fff; color:#2c5f8a; border:2px solid #2c5f8a; border-radius:30px; font-size:1rem; font-weight:700; cursor:pointer; transition:.15s; }
+    .btn-back:hover { background:#eaf1f8; }
+    .btn-send { padding:13px 48px; background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; border:none; border-radius:30px; font-size:1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(59,130,246,.35); transition:.15s; }
+    .btn-send:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(59,130,246,.45); }
+
+    /* Example block */
+    .example-box {
+      background: #eaf1f8;
+      border-left: 3px solid #2c5f8a;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      color: #444;
+      margin-bottom: 14px;
+      line-height: 1.7;
+    }
+    .example-box strong { color: #2c5f8a; display: block; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<div id="form-wrapper">
+<div class="page-header">
+  <h1>スキルシート 入力フォーム</h1>
+</div>
+
+<div class="container">
+
+  <!-- =========== 基本情報 =========== -->
+  <div class="section">
+    <div class="section-title">基本情報</div>
+    <div class="section-body">
+
+      <!-- 氏名 -->
+      <div class="field">
+        <label class="field-label required">氏名</label>
+        <div class="col2">
+          <div>
+            <input type="text" id="sei" name="sei" placeholder="例：田中" autocomplete="family-name">
+            <p class="hint">苗字</p>
+          </div>
+          <div>
+            <input type="text" id="mei" name="mei" placeholder="例：花子" autocomplete="given-name">
+            <p class="hint">名前</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- フリガナ -->
+      <div class="field">
+        <label class="field-label required">フリガナ</label>
+        <div class="col2">
+          <div>
+            <input type="text" id="sei_kana" name="sei_kana" placeholder="例：タナカ">
+            <p class="hint">セイ（カタカナ）</p>
+          </div>
+          <div>
+            <input type="text" id="mei_kana" name="mei_kana" placeholder="例：ハナコ">
+            <p class="hint">メイ（カタカナ）</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 生年月日 / 性別 -->
+      <div class="col2">
+        <div class="field">
+          <label class="field-label required">生年月日</label>
+          <div class="inline">
+            <input type="number" id="birth_year"  name="birth_year"  placeholder="19XX" min="1900" max="2099" style="max-width:100px;">
+            <span class="inline-label">年</span>
+            <input type="number" id="birth_month" name="birth_month" placeholder="MM" min="1" max="12" style="max-width:70px;">
+            <span class="inline-label">月</span>
+            <input type="number" id="birth_day"   name="birth_day"   placeholder="DD" min="1" max="31" style="max-width:70px;">
+            <span class="inline-label">日</span>
+          </div>
+          <p class="hint">西暦でご入力ください（例：1990 年 4 月 1 日）</p>
+        </div>
+        <div class="field">
+          <label class="field-label required" for="gender">性別</label>
+          <select id="gender" name="gender">
+            <option value="">選択してください</option>
+            <option value="男性">男性</option>
+            <option value="女性">女性</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 配偶者 / 出張可否 -->
+      <div class="col2">
+        <div class="field">
+          <label class="field-label required" for="spouse">配偶者</label>
+          <select id="spouse" name="spouse">
+            <option value="">選択してください</option>
+            <option value="有">有</option>
+            <option value="無">無</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label required" for="biz_trip">出張可否</label>
+          <select id="biz_trip" name="biz_trip">
+            <option value="">選択してください</option>
+            <option value="可">可</option>
+            <option value="否">否</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========== 連絡先情報 =========== -->
+  <div class="section">
+    <div class="section-title">連絡先情報</div>
+    <div class="section-body">
+
+      <!-- 電話番号 -->
+      <div class="field">
+        <label class="field-label required" for="phone">連絡先（電話番号）</label>
+        <input type="tel" id="phone" name="phone" placeholder="例：090-1234-5678" style="max-width:260px;">
+      </div>
+
+      <!-- 緊急連絡先 -->
+      <div class="field">
+        <label class="field-label required" for="emergency">緊急連絡先</label>
+        <input type="tel" id="emergency" name="emergency" placeholder="例：03-1234-5678" style="max-width:260px;">
+      </div>
+
+      <!-- メールアドレス -->
+      <div class="field">
+        <label class="field-label required" for="email">メールアドレス</label>
+        <input type="email" id="email" name="email" placeholder="例：example@email.com" autocomplete="email">
+      </div>
+
+      <!-- 住所 -->
+      <div class="field">
+        <label class="field-label required">住所</label>
+        <div class="postal-row" style="margin-bottom:10px;">
+          <input type="text" id="postal" name="postal" placeholder="例：123-4567" style="max-width:160px;" maxlength="8">
+          <button type="button" class="btn-postal" onclick="fetchAddress()">住所を自動入力</button>
+        </div>
+        <p class="hint" style="margin-bottom:8px;">〒 郵便番号（ハイフンあり・なし どちらでも可）</p>
+        <input type="text" id="address1" name="address1" placeholder="都道府県・市区町村（自動入力）" style="margin-bottom:8px;" readonly>
+        <input type="text" id="address2" name="address2" placeholder="番地・建物名・部屋番号">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========== アクセス情報 =========== -->
+  <div class="section">
+    <div class="section-title">アクセス情報</div>
+    <div class="section-body">
+
+      <!-- 最寄駅 -->
+      <div class="field">
+        <label class="field-label required">最寄駅</label>
+        <div class="col2">
+          <div>
+            <input type="text" id="train_line" name="train_line" placeholder="例：JR山手線">
+            <p class="hint">路線名</p>
+          </div>
+          <div>
+            <input type="text" id="station" name="station" placeholder="例：渋谷駅">
+            <p class="hint">駅名</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自宅から最寄駅までの所要時間 -->
+      <div class="field">
+        <label class="field-label" for="home_to_station">自宅から最寄駅までの所要時間</label>
+        <div class="inline">
+          <input type="text" id="home_to_station" name="home_to_station" placeholder="例：徒歩10分" style="max-width:200px;">
+        </div>
+      </div>
+
+      <!-- 通勤可能時間 -->
+      <div class="field">
+        <label class="field-label" for="commute_time">通勤可能時間</label>
+        <div class="inline">
+          <input type="text" id="commute_time" name="commute_time" placeholder="例：片道60分以内" style="max-width:220px;">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========== 希望条件 =========== -->
+  <div class="section">
+    <div class="section-title">希望条件</div>
+    <div class="section-body">
+
+      <!-- 入職希望月 -->
+      <div class="field">
+        <label class="field-label" for="join_month">入職希望月</label>
+        <div class="inline">
+          <input type="number" id="join_year"  name="join_year"  placeholder="20XX" min="2020" max="2099" style="max-width:90px;">
+          <span class="inline-label">年</span>
+          <input type="number" id="join_month" name="join_month" placeholder="MM" min="1" max="12" style="max-width:70px;">
+          <span class="inline-label">月</span>
+        </div>
+      </div>
+
+      <!-- 希望職種 -->
+      <div class="field">
+        <label class="field-label" for="desired_job">希望職種</label>
+        <input type="text" id="desired_job" name="desired_job" placeholder="例：事務・営業サポート">
+      </div>
+
+      <!-- 希望勤務時間 -->
+      <div class="field">
+        <label class="field-label required" for="desired_hours">希望勤務時間</label>
+        <input type="text" id="desired_hours" name="desired_hours" placeholder="例：9時〜18時 / 10時〜19時">
+        <p class="hint">ご希望の勤務時間帯をご記入ください</p>
+      </div>
+
+      <!-- 希望勤務日 -->
+      <div class="field">
+        <label class="field-label required" for="desired_days">希望勤務日</label>
+        <input type="text" id="desired_days" name="desired_days" placeholder="例：平日のみ / シフト制（週4〜5日）">
+        <p class="hint">ご希望の勤務日パターンをご記入ください</p>
+      </div>
+
+      <!-- 収入希望 -->
+      <div class="field">
+        <label class="field-label" for="desired_income">収入希望</label>
+        <div class="income-row">
+          <input type="number" id="desired_income" name="desired_income" placeholder="例：25" min="0" style="max-width:140px;">
+          <span class="income-unit">万円 / 月</span>
+        </div>
+      </div>
+
+      <!-- 最終学歴 -->
+      <div class="field">
+        <label class="field-label required" for="education">最終学歴</label>
+        <input type="text" id="education" name="education" placeholder="例：〇〇大学 〇〇学部 卒業">
+      </div>
+
+      <!-- 可能面談日 -->
+      <div class="field">
+        <label class="field-label">可能面談日（複数ご記入ください）</label>
+        <div class="interview-grid">
+          <div>
+            <input type="date" id="interview1" name="interview1">
+            <p class="hint">第1希望</p>
+          </div>
+          <div>
+            <input type="date" id="interview2" name="interview2">
+            <p class="hint">第2希望</p>
+          </div>
+          <div>
+            <input type="date" id="interview3" name="interview3">
+            <p class="hint">第3希望</p>
+          </div>
+          <div>
+            <input type="date" id="interview4" name="interview4">
+            <p class="hint">第4希望</p>
+          </div>
+        </div>
+        <p class="hint" style="margin-top:6px;">時間帯や備考がある場合は下欄にご記入ください</p>
+        <input type="text" id="interview_memo" name="interview_memo" placeholder="例：午前中希望 / 18時以降希望" style="margin-top:6px;">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========== 職歴 =========== -->
+  <div class="section">
+    <div class="section-title">職歴（アルバイト含む、直近3社）</div>
+    <div class="section-body">
+
+      <div class="example-box">
+        <strong>【業務内容の記入例】</strong>
+        ① Excelを使用した簡易集計（SUM・IF関数を用いた集計）<br>
+        ② 受電対応（1日○件程度／スクリプト使用）<br>
+        ③ 新人1〜2名への業務説明（マニュアルに沿って実施）
+      </div>
+
+      <!-- 職歴1 -->
+      <div class="work-card">
+        <div class="work-card-title">職歴 ① （直近）</div>
+
+        <div class="field">
+          <label class="field-label" for="work1_company">会社名</label>
+          <input type="text" id="work1_company" name="work1_company" placeholder="例：株式会社〇〇">
+        </div>
+
+        <div class="field">
+          <label class="field-label">在籍期間</label>
+          <div class="period-row">
+            <input type="number" name="work1_from_year"  placeholder="20XX" min="1950" max="2099" style="max-width:96px;">
+            <span class="period-sep">年</span>
+            <input type="number" name="work1_from_month" placeholder="MM" min="1" max="12" style="max-width:74px;">
+            <span class="period-sep">月 〜</span>
+            <input type="number" name="work1_to_year"    placeholder="20XX" min="1950" max="2099" style="max-width:96px;">
+            <span class="period-sep">年</span>
+            <input type="number" name="work1_to_month"   placeholder="MM" min="1" max="12" style="max-width:74px;">
+            <span class="period-sep">月</span>
+          </div>
+          <p class="hint">現在在籍中の場合は「終了月」を空欄にしてください</p>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work1_industry">業種</label>
+          <input type="text" id="work1_industry" name="work1_industry" placeholder="例：IT・通信 / 製造業 / 医療・福祉">
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work1_duties">業務内容</label>
+          <p class="hint" style="margin-bottom:6px;">どのような業務・ポジションを担当していたか等</p>
+          <textarea id="work1_duties" name="work1_duties" placeholder="上記の記入例を参考にご記入ください"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work1_software">使用していたオフィスソフト</label>
+          <input type="text" id="work1_software" name="work1_software" placeholder="例：Word・Excel・PowerPoint">
+        </div>
+      </div>
+
+      <!-- 職歴2 -->
+      <div class="work-card">
+        <div class="work-card-title">職歴 ②</div>
+
+        <div class="field">
+          <label class="field-label" for="work2_company">会社名</label>
+          <input type="text" id="work2_company" name="work2_company" placeholder="例：株式会社〇〇">
+        </div>
+
+        <div class="field">
+          <label class="field-label">在籍期間</label>
+          <div class="period-row">
+            <input type="number" name="work2_from_year"  placeholder="20XX" min="1950" max="2099" style="max-width:96px;">
+            <span class="period-sep">年</span>
+            <input type="number" name="work2_from_month" placeholder="MM" min="1" max="12" style="max-width:74px;">
+            <span class="period-sep">月 〜</span>
+            <input type="number" name="work2_to_year"    placeholder="20XX" min="1950" max="2099" style="max-width:96px;">
+            <span class="period-sep">年</span>
+            <input type="number" name="work2_to_month"   placeholder="MM" min="1" max="12" style="max-width:74px;">
+            <span class="period-sep">月</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work2_industry">業種</label>
+          <input type="text" id="work2_industry" name="work2_industry" placeholder="例：IT・通信 / 製造業 / 医療・福祉">
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work2_duties">業務内容</label>
+          <p class="hint" style="margin-bottom:6px;">どのような業務・ポジションを担当していたか等</p>
+          <textarea id="work2_duties" name="work2_duties" placeholder="上記の記入例を参考にご記入ください"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work2_software">使用していたオフィスソフト</label>
+          <input type="text" id="work2_software" name="work2_software" placeholder="例：Word・Excel・PowerPoint">
+        </div>
+      </div>
+
+      <!-- 職歴3 -->
+      <div class="work-card">
+        <div class="work-card-title">職歴 ③</div>
+
+        <div class="field">
+          <label class="field-label" for="work3_company">会社名</label>
+          <input type="text" id="work3_company" name="work3_company" placeholder="例：株式会社〇〇">
+        </div>
+
+        <div class="field">
+          <label class="field-label">在籍期間</label>
+          <div class="period-row">
+            <input type="number" name="work3_from_year"  placeholder="20XX" min="1950" max="2099" style="max-width:96px;">
+            <span class="period-sep">年</span>
+            <input type="number" name="work3_from_month" placeholder="MM" min="1" max="12" style="max-width:74px;">
+            <span class="period-sep">月 〜</span>
+            <input type="number" name="work3_to_year"    placeholder="20XX" min="1950" max="2099" style="max-width:96px;">
+            <span class="period-sep">年</span>
+            <input type="number" name="work3_to_month"   placeholder="MM" min="1" max="12" style="max-width:74px;">
+            <span class="period-sep">月</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work3_industry">業種</label>
+          <input type="text" id="work3_industry" name="work3_industry" placeholder="例：IT・通信 / 製造業 / 医療・福祉">
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work3_duties">業務内容</label>
+          <p class="hint" style="margin-bottom:6px;">どのような業務・ポジションを担当していたか等</p>
+          <textarea id="work3_duties" name="work3_duties" placeholder="上記の記入例を参考にご記入ください"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="work3_software">使用していたオフィスソフト</label>
+          <input type="text" id="work3_software" name="work3_software" placeholder="例：Word・Excel・PowerPoint">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========== スキル =========== -->
+  <div class="section">
+    <div class="section-title">スキル <span style="font-size:0.7rem; background:#e05555; color:#fff; border-radius:3px; padding:1px 6px; vertical-align:middle; font-weight:normal; letter-spacing:0;">必須</span></div>
+    <div class="section-body">
+
+      <p class="hint" style="margin-bottom:12px; font-size:0.88rem; color:#444;">
+        自己評価（何ができるか・どこまでできるかなど）をご選択・ご記入ください
+      </p>
+
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th style="width:110px;">ソフト</th>
+            <th style="width:160px;">経験レベル</th>
+            <th>詳細・具体的に使用した機能など</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Word</td>
+            <td>
+              <select name="word_level">
+                <option value="">選択</option>
+                <option>未経験</option>
+                <option>基本操作（文書作成・印刷）</option>
+                <option>中級（差し込み印刷・スタイル設定）</option>
+                <option>上級（マクロ・テンプレート作成）</option>
+              </select>
+            </td>
+            <td><input type="text" name="word_detail" placeholder="例：報告書・議事録の作成"></td>
+          </tr>
+          <tr>
+            <td>Excel</td>
+            <td>
+              <select name="excel_level">
+                <option value="">選択</option>
+                <option>未経験</option>
+                <option>基本操作（入力・表作成）</option>
+                <option>中級（VLOOKUP・ピボットテーブル）</option>
+                <option>上級（マクロ・VBA）</option>
+              </select>
+            </td>
+            <td><input type="text" name="excel_detail" placeholder="例：SUM・IF関数、ピボットテーブル"></td>
+          </tr>
+          <tr>
+            <td>PowerPoint</td>
+            <td>
+              <select name="ppt_level">
+                <option value="">選択</option>
+                <option>未経験</option>
+                <option>基本操作（スライド作成）</option>
+                <option>中級（アニメーション・テンプレート）</option>
+                <option>上級（複雑なデザイン・提案書作成）</option>
+              </select>
+            </td>
+            <td><input type="text" name="ppt_detail" placeholder="例：営業資料・プレゼン資料の作成"></td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+  <!-- =========== 資格 =========== -->
+  <div class="section">
+    <div class="section-title">資格・免許</div>
+    <div class="section-body">
+      <p class="hint" style="margin-bottom:12px;">お持ちの資格・免許をご記入ください（最大5件）</p>
+      <div class="cert-grid">
+        <div class="field">
+          <label class="field-label" for="cert1">資格 ①</label>
+          <input type="text" id="cert1" name="cert1" placeholder="例：日商簿記2級">
+        </div>
+        <div class="field">
+          <label class="field-label" for="cert2">資格 ②</label>
+          <input type="text" id="cert2" name="cert2" placeholder="例：MOS Excel 一般">
+        </div>
+        <div class="field">
+          <label class="field-label" for="cert3">資格 ③</label>
+          <input type="text" id="cert3" name="cert3" placeholder="例：普通自動車免許（AT限定）">
+        </div>
+        <div class="field">
+          <label class="field-label" for="cert4">資格 ④</label>
+          <input type="text" id="cert4" name="cert4" placeholder="例：TOEIC 700点">
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label class="field-label" for="cert5">資格 ⑤</label>
+          <input type="text" id="cert5" name="cert5" placeholder="例：介護福祉士">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== 自己PR =========== -->
+  <div class="section">
+    <div class="section-title">自己PR</div>
+    <div class="section-body">
+      <div class="field">
+        <label class="field-label required" for="selfpr">自己PR</label>
+        <p class="hint" style="margin-bottom:8px;">あなたの強み・仕事への姿勢・意欲などをご自由にご記入ください</p>
+        <textarea id="selfpr" name="selfpr" class="large" placeholder="例：前職では受電対応とデータ入力を担当しており、正確かつ迅速な処理を心がけていました。新しい環境でも柔軟に対応し、早期に戦力となるよう努めます。"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="submit-area">
+    <button type="button" class="btn-submit" onclick="showConfirmation(event)">確認する</button>
+  </div>
+
+</div><!-- /container -->
+</div><!-- /form-wrapper -->
+
+<!-- =========== 確認画面 =========== -->
+<div id="confirm-screen" style="display:none;">
+  <div class="page-header">
+    <h1>入力内容のご確認</h1>
+    <p>以下の内容でよろしければ「送信する」ボタンを押してください。修正する場合は「戻って修正する」を押してください。</p>
+  </div>
+  <div class="container">
+    <div id="confirm-content"></div>
+    <div class="confirm-actions">
+      <button class="btn-back" onclick="goBack()">← 戻って修正する</button>
+      <button class="btn-send" onclick="doSubmit()">送信する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- ヘルパー ---
+  function v(id)  { const e = document.getElementById(id); return e ? e.value.trim() : ''; }
+  function nv(nm) { const e = document.querySelector(`[name="${nm}"]`); return e ? e.value.trim() : ''; }
+
+  function row(label, value) {
+    const disp = (value && value.trim && value.trim()) || (value && !value.trim) ? value : '';
+    const show  = disp ? disp : '<span class="confirm-empty">未入力</span>';
+    return `<tr><td>${label}</td><td>${show}</td></tr>`;
+  }
+  function sec(title, rows) {
+    return `<div class="confirm-section"><div class="confirm-section-title">${title}</div><table class="confirm-table">${rows}</table></div>`;
+  }
+
+  function buildConfirmHtml() {
+    let h = '';
+
+    // 基本情報
+    const birthY = v('birth_year'), birthM = v('birth_month'), birthD = v('birth_day');
+    h += sec('基本情報',
+      row('氏名',      [v('sei'), v('mei')].filter(Boolean).join('　')) +
+      row('フリガナ',  [v('sei_kana'), v('mei_kana')].filter(Boolean).join('　')) +
+      row('生年月日',  birthY ? `${birthY}年 ${birthM}月 ${birthD}日` : '') +
+      row('性別',      v('gender')) +
+      row('配偶者',    v('spouse')) +
+      row('出張可否',  v('biz_trip'))
+    );
+
+    // 連絡先情報
+    const postal = v('postal'), addr1 = v('address1'), addr2 = v('address2');
+    h += sec('連絡先情報',
+      row('連絡先（電話番号）', v('phone')) +
+      row('緊急連絡先',        v('emergency')) +
+      row('メールアドレス',    v('email')) +
+      row('郵便番号',          postal ? `〒${postal}` : '') +
+      row('住所',              [addr1, addr2].filter(Boolean).join('　'))
+    );
+
+    // アクセス情報
+    h += sec('アクセス情報',
+      row('最寄駅（路線）',           v('train_line')) +
+      row('最寄駅（駅名）',           v('station')) +
+      row('自宅〜最寄駅の所要時間',   v('home_to_station')) +
+      row('通勤可能時間',             v('commute_time'))
+    );
+
+    // 希望条件
+    const joinY = v('join_year'), joinM = v('join_month');
+    const interviews = [1,2,3,4]
+      .map(i => v(`interview${i}`)).filter(Boolean)
+      .map((d, i) => `第${i+1}希望：${d}`).join('<br>');
+    h += sec('希望条件',
+      row('入職希望月',   joinY ? `${joinY}年 ${joinM}月` : '') +
+      row('希望職種',     v('desired_job')) +
+      row('希望勤務時間', v('desired_hours')) +
+      row('希望勤務日',   v('desired_days')) +
+      row('収入希望',     v('desired_income') ? `${v('desired_income')} 万円 / 月` : '') +
+      row('最終学歴',     v('education')) +
+      row('可能面談日',   interviews || '') +
+      row('面談備考',     v('interview_memo'))
+    );
+
+    // 職歴
+    ['①','②','③'].forEach((num, i) => {
+      const n = i + 1;
+      const fy = nv(`work${n}_from_year`), fm = nv(`work${n}_from_month`);
+      const ty = nv(`work${n}_to_year`),   tm = nv(`work${n}_to_month`);
+      const period = fy ? `${fy}年 ${fm}月 〜 ${ty ? ty+'年 ' : ''}${tm ? tm+'月' : '（現在）'}` : '';
+      const duties = v(`work${n}_duties`);
+      h += sec(`職歴 ${num}${n === 1 ? '（直近）' : ''}`,
+        row('会社名',           v(`work${n}_company`)) +
+        row('在籍期間',         period) +
+        row('業種',             v(`work${n}_industry`)) +
+        row('業務内容',         duties ? duties.replace(/\n/g, '<br>') : '') +
+        row('使用オフィスソフト', v(`work${n}_software`))
+      );
+    });
+
+    // スキル
+    const wL = nv('word_level'),  wD = nv('word_detail');
+    const eL = nv('excel_level'), eD = nv('excel_detail');
+    const pL = nv('ppt_level'),   pD = nv('ppt_detail');
+    h += sec('スキル',
+      row('Word',       [wL, wD].filter(Boolean).join('　／　')) +
+      row('Excel',      [eL, eD].filter(Boolean).join('　／　')) +
+      row('PowerPoint', [pL, pD].filter(Boolean).join('　／　'))
+    );
+
+    // 資格
+    const certs = [1,2,3,4,5].map(i => v(`cert${i}`)).filter(Boolean);
+    h += sec('資格・免許', row('取得資格・免許', certs.join('<br>')));
+
+    // 自己PR
+    const pr = v('selfpr');
+    h += sec('自己PR', row('自己PR', pr ? pr.replace(/\n/g, '<br>') : ''));
+
+    return h;
+  }
+
+  // --- 確認画面へ移行 ---
+  function showConfirmation(e) {
+    e.preventDefault();
+    if (!v('sei') || !v('mei')) {
+      alert('氏名（苗字・名前）は必須項目です。両方をご入力ください。');
+      document.getElementById('sei').focus();
+      return;
+    }
+    document.getElementById('confirm-content').innerHTML = buildConfirmHtml();
+    document.getElementById('form-wrapper').style.display  = 'none';
+    document.getElementById('confirm-screen').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  // --- フォームに戻る ---
+  function goBack() {
+    document.getElementById('confirm-screen').style.display = 'none';
+    document.getElementById('form-wrapper').style.display   = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  // --- 送信 ---
+  // ↓ Google Apps ScriptをデプロイしたらURLをここに貼り付けてください
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykQkv968L1IEMfx7X7nN2-A-LzMj2LHbyqdW2n2Bp4Xrir_Dtws9N7ywAoUsW0bVfV/exec';
+
+  function collectFormData() {
+    const birthY = v('birth_year'), birthM = v('birth_month'), birthD = v('birth_day');
+    const joinY  = v('join_year'),  joinM  = v('join_month');
+
+    const workPeriod = n => {
+      const fy = nv(`work${n}_from_year`), fm = nv(`work${n}_from_month`);
+      const ty = nv(`work${n}_to_year`),   tm = nv(`work${n}_to_month`);
+      return fy ? `${fy}年${fm}月〜${ty ? ty+'年' : ''}${tm ? tm+'月' : '現在'}` : '';
+    };
+
+    const skillStr = (lv, dt) => [lv, dt].filter(Boolean).join(' / ');
+
+    return {
+      name:      [v('sei'), v('mei')].filter(Boolean).join(' '),
+      nameKana:  [v('sei_kana'), v('mei_kana')].filter(Boolean).join(' '),
+      joinMonth: joinY ? `${joinY}年${joinM}月` : '',
+      phone:     v('phone'),
+      emergency: v('emergency'),
+      email:     v('email'),
+      birthDate: birthY ? `${birthY}年${birthM}月${birthD}日` : '',
+      gender:    v('gender'),
+      trainLine: v('train_line'),
+      station:   v('station'),
+      homeToStation: v('home_to_station'),
+      spouse:    v('spouse'),
+      bizTrip:   v('biz_trip'),
+      address:   [v('postal') ? '〒' + v('postal') : '', v('address1'), v('address2')].filter(Boolean).join(' '),
+      education:    v('education'),
+      commuteTime:  v('commute_time'),
+      desiredHours: v('desired_hours'),
+      desiredDays:  v('desired_days'),
+      desiredJob:   v('desired_job'),
+      desiredIncome: v('desired_income') ? v('desired_income') + '万円/月' : '',
+      interviews: [1,2,3,4].map(i => v(`interview${i}`)).filter(Boolean)
+                           .map((d, i) => `第${i+1}希望：${d}`).join(' / '),
+      work1Company:  v('work1_company'),  work1Period: workPeriod(1),
+      work1Industry: v('work1_industry'), work1Duties: v('work1_duties'),
+      work1Software: v('work1_software'),
+      work2Company:  v('work2_company'),  work2Period: workPeriod(2),
+      work2Industry: v('work2_industry'), work2Duties: v('work2_duties'),
+      work2Software: v('work2_software'),
+      work3Company:  v('work3_company'),  work3Period: workPeriod(3),
+      work3Industry: v('work3_industry'), work3Duties: v('work3_duties'),
+      work3Software: v('work3_software'),
+      wordSkill:  skillStr(nv('word_level'),  nv('word_detail')),
+      excelSkill: skillStr(nv('excel_level'), nv('excel_detail')),
+      pptSkill:   skillStr(nv('ppt_level'),   nv('ppt_detail')),
+      certs:  [1,2,3,4,5].map(i => v(`cert${i}`)).filter(Boolean).join('、'),
+      selfPR: v('selfpr')
+    };
+  }
+
+  async function doSubmit() {
+    if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL') {
+      alert('送信先のURLが設定されていません。\nCode.gsをデプロイしてURLをindex.htmlに設定してください。');
+      return;
+    }
+    const btn = document.querySelector('.btn-send');
+    btn.textContent = '送信中...';
+    btn.disabled = true;
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode:   'no-cors',
+        body:   JSON.stringify(collectFormData())
+      });
+      alert('送信完了しました！お疲れ様です！');
+      // フォームをリセット
+      document.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => el.value = '');
+      goBack();
+      window.scrollTo(0, 0);
+    } catch (err) {
+      alert('送信に失敗しました。\nネットワーク接続をご確認ください。');
+    } finally {
+      btn.textContent = '送信する';
+      btn.disabled = false;
+    }
+  }
+
+  // --- 郵便番号自動入力 ---
+  async function fetchAddress() {
+    const raw = document.getElementById('postal').value.replace(/[^\d]/g, '');
+    if (raw.length !== 7) {
+      alert('郵便番号を7桁で入力してください（例：1234567 または 123-4567）');
+      return;
+    }
+    try {
+      const res  = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${raw}`);
+      const data = await res.json();
+      if (data.status === 200 && data.results) {
+        const r = data.results[0];
+        document.getElementById('address1').value = (r.address1||'') + (r.address2||'') + (r.address3||'');
+        document.getElementById('address2').focus();
+      } else {
+        alert('該当する住所が見つかりませんでした。郵便番号をご確認ください。');
+      }
+    } catch {
+      alert('住所の取得に失敗しました。ネットワーク接続をご確認ください。');
+    }
+  }
+
+  document.getElementById('postal').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); fetchAddress(); }
+  });
+</script>
+
+</body>
+</html>
